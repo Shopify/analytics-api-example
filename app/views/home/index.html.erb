@@ -1,20 +1,58 @@
 <script type="text/javascript">
-  ShopifyApp.ready(function(){
-    ShopifyApp.Bar.initialize({
-      title: "Home",
-      icon: "<%= asset_path('faveicon.png') %>"
+  $(document).on('ready', function() {
+    $('.run').click(function(event) {
+      var shopifyQL = $('.query-text').val();
+      renderData = function(response) {
+        View.render('.result', response);
+      };
+      ShopifyApp.Analytics.fetch({
+        query: shopifyQL,
+        success: renderData,
+        error: renderData
+      });
     });
   });
 </script>
-<h3>Products</h3>
-<table>
-  <tbody>
-    <% @products.each do |product| %>
-      <tr>
-        <td>
-          <a href='https://<%="#{@shop_session.url}/admin/products/#{product.id}"%>' target="_blank"> <%= product.id %> </a>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+
+<%= link_to "Pageviews Example", pageviews_path %>
+
+<label for="query">ShopifyQL Query</label>
+<textarea class="query-text" rows="6" id="query" name="query">SHOW count() AS visits, sum(pageview_count) AS pageviews OVER day(timestamp) AS day BY day_of_week(timestamp) AS weekday
+FROM visits
+WHERE channel_name == 'Storefront'
+SINCE -2w UNTIL today ORDER BY day</textarea>
+<input type="submit" value="Fetch" class="query-btn run">
+
+<div style="display: none">
+  <blockquote>
+  total sessions, total visitors by day
+  <br/>
+  SHOW total_sessions, total_visitors OVER day(timestamp) FROM visits WHERE channel_name == 'Storefront' SINCE 2016-02-06 UNTIL 2016-02-12 ORDER BY day_timestamp ASC</blockquote>
+
+  <blockquote>
+  total storefront sessions
+  <br/>
+  SHOW total_sessions FROM visits WHERE channel_name == 'Storefront' SINCE 2016-02-06 UNTIL 2016-02-12</blockquote>
+
+  <blockquote>
+  total storefront sessions and carts (funnel)
+  <br/>
+  SHOW total_sessions, total_carts FROM visits WHERE channel_name == 'Storefront' SINCE 2016-02-06 UNTIL 2016-02-12</blockquote>
+
+  <blockquote>
+  total sessions by referrer
+  <br/>
+  SHOW total_sessions BY referrer_name FROM visits WHERE referrer_source == 'Social' AND channel_name == 'Storefront' SINCE 2016-02-06 UNTIL 2016-02-12 ORDER BY total_sessions DESC LIMIT 8</blockquote>
+
+  <blockquote>
+  total sessions by browser
+  <br/>
+  SHOW total_sessions BY ua_browser FROM visits WHERE channel_name == 'Storefront' SINCE 2016-02-06 UNTIL 2016-02-12 ORDER BY total_sessions DESC LIMIT 8</blockquote>
+
+  <blockquote>
+  sessions by page
+  <br/>
+  SHOW total_sessions BY page_path FROM visits WHERE channel_name == 'Storefront' SINCE 2016-02-06 UNTIL 2016-02-12 ORDER BY total_sessions DESC LIMIT 8</blockquote>
+</div>
+<div class="result">
+</div>
